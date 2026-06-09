@@ -6,7 +6,7 @@ gsap.registerPlugin(ScrollTrigger)
 
 /* ── CONFIG ── */
 const TOTAL_FRAMES = 240
-const FRAME_PATH = (i) => `/frames/ezgif-frame-${String(i).padStart(3, '0')}.png`
+const FRAME_PATH = (i) => `${import.meta.env.BASE_URL}frames/ezgif-frame-${String(i).padStart(3, '0')}.png`
 
 /* ──────────────────────────────────────────────────────────────────
    CUSTOM CURSOR
@@ -71,7 +71,7 @@ function useAmbientSound() {
     masterGain.connect(ctx.destination)
 
     // Load user's provided song
-    const song = new Audio('/Song.mp3')
+    const song = new Audio(`${import.meta.env.BASE_URL}Song.mp3`)
     song.loop = true
     song.crossOrigin = "anonymous"
     const songSource = ctx.createMediaElementSource(song)
@@ -709,7 +709,7 @@ function EducationMap({ playHover }) {
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
         >
-          <img src="/custom_map.png" alt="Journey Map" className="map-image" />
+          <img src={`${import.meta.env.BASE_URL}custom_map.png`} alt="Journey Map" className="map-image" />
           
           <svg className="map-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
             <path className="map-path-base" d={pathData} />
