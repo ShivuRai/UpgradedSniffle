@@ -418,18 +418,123 @@ section { position: relative; width: 100%; }
 }
 .terminal-submit:hover { background: rgba(0, 240, 255, 0.1); box-shadow: 0 0 20px rgba(0, 240, 255, 0.2); }
 
-/* ── MISSIONS (Simplified Layout for transparency) ── */
-.missions-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem; max-width: 1200px; margin: 0 auto; }
-.mission-card {
-  border: 1px solid var(--color-border); background: rgba(18, 18, 30, 0.7); backdrop-filter: blur(12px);
-  padding: 2rem; transition: var(--transition-smooth);
+/* ── MISSIONS (Page Stack Design) ── */
+.missions-grid { 
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  max-width: 1200px; 
+  margin: 0 auto; 
+  padding: 4rem 0;
+  perspective: 1500px;
 }
-.mission-card:hover { border-color: rgba(0, 240, 255, 0.3); transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.6), inset 0 0 20px rgba(0,240,255,0.05); }
-.mission-number { font-family: var(--font-display); font-size: 0.6rem; letter-spacing: 0.5em; color: var(--color-accent); text-transform: uppercase; margin-bottom: 0.5rem; }
-.mission-title { font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
-.mission-desc { font-size: 0.85rem; line-height: 1.6; color: #ccc; margin-bottom: 1.5rem; }
-.mission-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-.mission-tag { font-family: var(--font-ui); font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; padding: 0.3rem 0.8rem; border: 1px solid rgba(0, 240, 255, 0.15); color: var(--color-accent); background: rgba(0, 240, 255, 0.05); }
+.mission-card-wrapper {
+  position: relative;
+  width: 380px;
+  margin-left: -190px; /* Strong overlap for stacking effect */
+}
+.mission-card-wrapper:first-child {
+  margin-left: 0;
+}
+.mission-card {
+  position: relative;
+  width: 100%;
+  transform-style: preserve-3d;
+  cursor: none;
+  background: none;
+  border: none;
+  padding: 0;
+  backdrop-filter: none;
+  /* Z-index is handled by GSAP */
+}
+.mission-page-img {
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 20px 40px rgba(0,0,0,0.8));
+  transition: filter 0.4s ease;
+}
+.mission-card:hover .mission-page-img {
+  filter: drop-shadow(0 40px 80px rgba(0,0,0,1)) drop-shadow(0 0 40px rgba(123, 47, 255, 0.4)); /* Magical Arcane Glow */
+}
+
+.mission-content {
+  position: absolute;
+  top: 18%; left: 15%; right: 15%; bottom: 18%; /* Constrain strictly to the center */
+  z-index: 2;
+  transform: translateZ(50px); /* Pops off the page in 3D */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  pointer-events: none;
+}
+
+/* Spell-like Ink Text Styles */
+.mission-number { 
+  font-family: var(--font-ui); 
+  font-size: 0.75rem; 
+  letter-spacing: 0.5em; 
+  color: #3c096c; /* Deep arcane purple */
+  text-transform: uppercase; 
+  margin-bottom: 0.8rem; 
+  font-weight: bold;
+}
+.mission-title { 
+  font-family: var(--font-display); 
+  font-size: 1.3rem; 
+  font-weight: 900; 
+  text-transform: uppercase; 
+  letter-spacing: 0.05em; 
+  margin-bottom: 1rem;
+  color: #10002b; /* Darkest purple/black */
+  text-shadow: 0 0 8px rgba(123, 47, 255, 0.6); /* Glowing spell effect */
+}
+.mission-desc { 
+  font-size: 0.85rem; 
+  line-height: 1.6; 
+  color: #240046; /* Readable dark purple */
+  font-weight: 600;
+  margin-bottom: auto; 
+}
+.mission-tags { 
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 0.4rem; 
+  margin-top: 1rem;
+}
+.mission-tag { 
+  font-family: var(--font-ui); 
+  font-size: 0.6rem; 
+  letter-spacing: 0.1em; 
+  text-transform: uppercase; 
+  padding: 0.3rem 0.6rem; 
+  border: 1px dashed rgba(60, 9, 108, 0.5); /* dashed border for spellbook feel */
+  color: #10002b; 
+  background: rgba(123, 47, 255, 0.1); 
+  border-radius: 2px;
+}
+
+.mission-hover-prompt {
+  position: absolute;
+  bottom: 5%;
+  left: 50%;
+  transform: translateX(-50%) translateZ(70px);
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  letter-spacing: 0.3em;
+  color: #fff;
+  background: rgba(16, 0, 43, 0.9);
+  border: 1px solid var(--color-accent-alt);
+  padding: 0.5rem 1rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.5), 0 0 10px rgba(123, 47, 255, 0.5);
+}
+.mission-card:hover .mission-hover-prompt {
+  opacity: 1;
+}
 
 /* ── HUD & SOUND ── */
 .hud { position: fixed; inset: 0; z-index: var(--z-hud); pointer-events: none; padding: 2rem; }
@@ -448,62 +553,14 @@ section { position: relative; width: 100%; }
 .sound-bar:nth-child(4) { height: 10px; animation-delay: 0.45s; }
 .sound-muted .sound-bar { animation: none; height: 2px !important; opacity: 0.3; }
 
-/* ── KEYFRAMES ── */
-@keyframes scrollBounce { 0%, 100% { transform: rotate(45deg) translate(0, 0); opacity: 0.3; } 50% { transform: rotate(45deg) translate(5px, 5px); opacity: 1; } }
-@keyframes glitchText { 0%, 100% { text-shadow: none; transform: translate(0); } 2% { text-shadow: -2px 0 #ff2d7b, 2px 0 #00f0ff; transform: translate(-1px, 1px); } 4% { text-shadow: 2px 0 #ff2d7b, -2px 0 #00f0ff; transform: translate(1px, -1px); } 6% { text-shadow: none; transform: translate(0); } }
-@keyframes grainShift { 0% { transform: translate(0, 0); } 10% { transform: translate(-1%, -1%); } 50% { transform: translate(-1%, 0%); } 100% { transform: translate(0, 0); } }
-@keyframes soundBar { 0% { height: 2px; } 100% { height: 12px; } }
-@keyframes rotateGlow { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-@keyframes pulseOpacity { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
-@keyframes cameraShake {
-  0% { transform: translate(0, 0); } 10% { transform: translate(-2px, 1px); } 20% { transform: translate(2px, -1px); }
-  30% { transform: translate(-1px, 2px); } 40% { transform: translate(1px, -2px); } 50% { transform: translate(-2px, -1px); }
-  60% { transform: translate(2px, 1px); } 70% { transform: translate(-1px, -1px); } 80% { transform: translate(1px, 2px); }
-  90% { transform: translate(-2px, 0); } 100% { transform: translate(0, 0); }
-}
-.camera-shake { animation: cameraShake 0.4s ease-out; }
-
-/* ── RESPONSIVE & MOBILE OPTIMIZATION ── */
 @media (max-width: 1024px) {
-  .map-section { padding: 4rem 5%; }
-  .archive-grid { gap: 1.5rem; }
+  .missions-grid { flex-wrap: wrap; gap: 2rem; margin-left: 0; }
+  .mission-card-wrapper { margin-left: 0; margin-bottom: -100px; }
+  .mission-card-wrapper:last-child { margin-bottom: 0; }
 }
 
 @media (max-width: 768px) {
-  body { cursor: auto; overflow-x: hidden; }
-  * { cursor: auto !important; } /* Force disable custom cursors on touch */
-  .cursor-dot, .cursor-ring { display: none !important; }
-  
-  .hero-title { font-size: clamp(2rem, 10vw, 3.5rem); }
-  .hero-subtitle { font-size: 0.6rem; letter-spacing: 0.3em; }
-  .section-header { margin-bottom: 2rem; }
-  
-  .skill-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
-  .hud-corner { display: none; }
-  
-  /* Mobile Map Optimizations */
-  .map-float-container { margin-top: 1rem; }
-  .map-tooltip { 
-    top: auto; bottom: 30px; transform: translateY(-10px) scale(0.95); 
-    width: 200px; padding: 0.8rem; z-index: 100;
-  }
-  .map-tooltip::before {
-    top: auto; bottom: -6px; border-top: 6px solid var(--color-accent-gold); border-bottom: none;
-  }
-  .map-node:hover .map-tooltip, .map-node:active .map-tooltip { 
-    opacity: 1; transform: translateY(0) scale(1); 
-  }
-  
-  /* Archive Cards */
-  .archive-slate { padding: 1.5rem; }
-  .archive-title { font-size: 1rem; }
-  
-  /* Forms & Navigation */
-  .portal-section { padding: 3rem 5%; }
-  .terminal-container { padding: 1.5rem; }
-  .terminal-submit { padding: 1rem 2rem; width: 100%; text-align: center; }
-  
-  /* Sound Toggle */
-  .sound-toggle { bottom: 1rem; right: 1rem; transform: scale(0.85); }
+  .missions-grid { flex-direction: column; gap: 2rem; }
+  .mission-card-wrapper { margin-left: 0; margin-top: -100px; margin-bottom: 0; }
+  .mission-card-wrapper:first-child { margin-top: 0; }
 }

@@ -180,7 +180,14 @@ function useAmbientSound() {
     osc.stop(ctx.currentTime + 0.15)
   }, [])
 
-  return { muted, toggle, playWhoosh, playUIHover }
+  const playPageFlip = useCallback(() => {
+    if (mutedRef.current) return
+    const sound = new Audio(`${import.meta.env.BASE_URL}PageSound.mp3`)
+    sound.volume = 0.5
+    sound.play().catch(e => console.warn(e))
+  }, [])
+
+  return { muted, toggle, playWhoosh, playUIHover, playPageFlip }
 }
 
 /* ──────────────────────────────────────────────────────────────────
@@ -236,28 +243,112 @@ function FloatingItems() {
   
   useEffect(() => {
     const items = gsap.utils.toArray('.floating-item')
+
+    const float = (item, dirX = null, dirY = null) => {
+      if (item.classList.contains('is-repelled')) return;
+      
+      let targetX, targetY, floatDuration;
+      const currentX = gsap.getProperty(item, "x") || 0;
+      const currentY = gsap.getProperty(item, "y") || 0;
+      
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      
+      // Check if item is significantly off-screen
+      const isOffScreen = currentX < -100 || currentX > w + 100 || currentY < -100 || currentY > h + 100;
+
+      if (dirX !== null && dirY !== null) {
+        // Continue floating in the pushed direction
+        const mag = Math.sqrt(dirX * dirX + dirY * dirY) || 1;
+        const driftDistance = 800 + Math.random() * 600; 
+        
+        targetX = currentX + (dirX / mag) * driftDistance;
+        targetY = currentY + (dirY / mag) * driftDistance;
+        floatDuration = 4 + Math.random() * 3; // Drift quickly off-screen
+      } else {
+        // Random natural floating
+        targetX = (Math.random() - 0.1) * w * 1.1;
+        targetY = (Math.random() - 0.1) * h * 1.1;
+        
+        if (isOffScreen) {
+          // If it's off-screen, return to the screen area quickly
+          targetX = w / 2 + (Math.random() - 0.5) * w * 0.6;
+          targetY = h / 2 + (Math.random() - 0.5) * h * 0.6;
+          floatDuration = 4 + Math.random() * 3; // Hurry back (4-7 seconds)
+        } else {
+          floatDuration = 15 + Math.random() * 15; // Normal lazy float (15-30 seconds)
+        }
+      }
+
+      gsap.to(item, {
+        x: targetX,
+        y: targetY,
+        rotation: `+=${(Math.random() - 0.5) * 180}`,
+        duration: floatDuration,
+        ease: "none",
+        onComplete: () => float(item) // Reverts to natural floating next cycle
+      })
+    }
+
     items.forEach(item => {
-      // Random initial placement, ensuring they start on-screen so they are immediately visible
+      // Random initial placement
       gsap.set(item, {
         x: () => Math.random() * window.innerWidth,
         y: () => Math.random() * window.innerHeight,
         rotation: () => Math.random() * 360,
-        scale: () => 0.4 + Math.random() * 0.6 // varying sizes
+        scale: () => 0.4 + Math.random() * 0.6
       })
-
-      // Continuous random drifting function
-      const float = () => {
-        gsap.to(item, {
-          x: () => (Math.random() - 0.2) * window.innerWidth * 1.2, // Drift slightly off-screen but mostly on-screen
-          y: () => (Math.random() - 0.2) * window.innerHeight * 1.2,
-          rotation: `+=${(Math.random() - 0.5) * 180}`,
-          duration: 15 + Math.random() * 15, // Smooth floating speed
-          ease: "sine.inOut",
-          onComplete: float
-        })
-      }
-      float() // start animation loop
+      float(item)
     })
+
+    // Hover repulsion effect
+    const onMouseMove = (e) => {
+      const mouseX = e.clientX;
+      const mouseY = e.clientY;
+      const repelDistance = 250; // Distance threshold for repulsion
+      
+      items.forEach(item => {
+        const rect = item.getBoundingClientRect();
+        const itemX = rect.left + rect.width / 2;
+        const itemY = rect.top + rect.height / 2;
+
+        const dx = itemX - mouseX;
+        const dy = itemY - mouseY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < repelDistance) {
+          // Calculate push strength based on proximity
+          const pushFactor = Math.pow((repelDistance - distance) / repelDistance, 1.5);
+          const pushX = (dx / distance) * pushFactor * 400; // Increased push distance
+          const pushY = (dy / distance) * pushFactor * 400; // Increased push distance
+          
+          item.classList.add('is-repelled');
+          gsap.killTweensOf(item);
+          
+          const currentX = gsap.getProperty(item, "x");
+          const currentY = gsap.getProperty(item, "y");
+
+          gsap.to(item, {
+            x: currentX + pushX,
+            y: currentY + pushY,
+            rotation: `+=${(Math.random() - 0.5) * 120}`,
+            duration: 0.5, // Reduced duration for faster push
+            ease: "power2.out",
+            onComplete: () => {
+              item.classList.remove('is-repelled');
+              // Pass the push vector to continue drifting in that direction
+              float(item, pushX, pushY);
+            }
+          });
+        }
+      });
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+    }
   }, [])
 
   const ITEM_COUNT = 8
@@ -646,7 +737,7 @@ function MissionsShowcase({ playHover }) {
       })
       gsap.utils.toArray('.mission-card').forEach((card, i) => {
         gsap.from(card, {
-          opacity: 0, y: 50, duration: 0.7, delay: i * 0.2,
+          opacity: 0, y: 50, rotationY: 15, duration: 0.8, delay: i * 0.2,
           scrollTrigger: { trigger: '.missions-grid', start: 'top 80%', toggleActions: 'play none none reverse' }
         })
       })
@@ -654,19 +745,67 @@ function MissionsShowcase({ playHover }) {
     return () => ctx.revert()
   }, [])
 
+  const handleMouseEnter = (i) => {
+    playHover();
+    const card = document.getElementById(`mission-card-${i}`);
+    if (card) {
+      // Bring to front, scale up, move up
+      gsap.to(card, { scale: 1.15, y: -40, zIndex: 100, duration: 0.4, ease: 'back.out(1.5)' });
+    }
+  }
+
+  const handleMouseMove = (e, i) => {
+    const card = document.getElementById(`mission-card-${i}`)
+    if (!card) return
+    const rect = card.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
+    const centerX = rect.width / 2
+    const centerY = rect.height / 2
+    
+    // Dynamic 3D tilt effect on hover
+    const rotateX = ((y - centerY) / centerY) * -15
+    const rotateY = ((x - centerX) / centerX) * 15
+    gsap.to(card, { rotateX, rotateY, duration: 0.1, ease: 'none' })
+  }
+
+  const handleMouseLeave = (i) => {
+    const card = document.getElementById(`mission-card-${i}`)
+    if (!card) return
+    // Revert tilt and scale, return to original z-index
+    gsap.to(card, { rotateX: 0, rotateY: 0, scale: 1, y: 0, zIndex: i, duration: 0.6, ease: 'power2.out' })
+  }
+
   return (
-    <section ref={sectionRef} className="missions-section" style={{ padding: '6rem 8%', minHeight: '100vh' }}>
+    <section ref={sectionRef} className="missions-section" style={{ padding: '6rem 8%', minHeight: '100vh', perspective: '1500px' }}>
       <div className="section-header missions-header">
         <div className="section-label">// Operations</div>
         <h2>Project Archives</h2>
       </div>
       <div className="missions-grid">
         {MISSIONS.map((m, i) => (
-          <div className="mission-card" key={i} onMouseEnter={playHover}>
-            <div className="mission-number">{m.number}</div>
-            <h3 className="mission-title">{m.title}</h3>
-            <p className="mission-desc">{m.desc}</p>
-            <div className="mission-tags">{m.tags.map(t => <span className="mission-tag" key={t}>{t}</span>)}</div>
+          <div className="mission-card-wrapper" key={i}>
+            <div 
+              className="mission-card" 
+              id={`mission-card-${i}`}
+              style={{ zIndex: i }}
+              onMouseEnter={() => handleMouseEnter(i)}
+              onMouseMove={(e) => handleMouseMove(e, i)}
+              onMouseLeave={() => handleMouseLeave(i)}
+            >
+              <img src={`${import.meta.env.BASE_URL}pages/Page1.png`} alt="Project Page" className="mission-page-img" />
+              
+              <div className="mission-content">
+                <div className="mission-number">{m.number}</div>
+                <h3 className="mission-title">{m.title}</h3>
+                <p className="mission-desc">{m.desc}</p>
+                <div className="mission-tags">
+                  {m.tags.map(t => <span className="mission-tag" key={t}>{t}</span>)}
+                </div>
+              </div>
+
+              <div className="mission-hover-prompt">Let's do it!</div>
+            </div>
           </div>
         ))}
       </div>
@@ -918,7 +1057,7 @@ export default function App() {
   const [loaded, setLoaded] = useState(false)
   const [showSoundPop, setShowSoundPop] = useState(false)
   const appRef = useRef(null)
-  const { muted, toggle: toggleSound, playWhoosh, playUIHover } = useAmbientSound()
+  const { muted, toggle: toggleSound, playWhoosh, playUIHover, playPageFlip } = useAmbientSound()
 
   useEffect(() => {
     if (loaded && !muted) {
@@ -993,7 +1132,7 @@ export default function App() {
           desc="Arcane diagrams reveal the architecture of digital worlds. Each project is a new dimension brought to life."
         />
 
-        <MissionsShowcase playHover={playUIHover} />
+        <MissionsShowcase playHover={playPageFlip} />
 
         <ChapterText 
           chapter="Chapter III" 
