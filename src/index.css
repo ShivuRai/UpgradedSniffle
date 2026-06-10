@@ -141,6 +141,19 @@ button { cursor: none; border: none; background: none; font-family: inherit; col
   background: rgba(0,0,0,0.35);
 }
 
+/* ── FLOATING ARTIFACTS ── */
+.floating-items-container {
+  position: fixed; inset: 0; pointer-events: none; z-index: 2;
+  overflow: hidden;
+}
+.floating-item {
+  position: absolute;
+  width: clamp(60px, 8vw, 120px);
+  opacity: 0.7;
+  filter: drop-shadow(0 10px 20px rgba(0,0,0,0.8)) drop-shadow(0 0 15px rgba(255, 215, 0, 0.15));
+  will-change: transform;
+}
+
 /* ── MAIN CONTENT SCROLL CONTAINER ── */
 .content-layer { position: relative; z-index: var(--z-content); width: 100%; }
 

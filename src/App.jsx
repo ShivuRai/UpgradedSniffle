@@ -229,6 +229,61 @@ function CinematicLoader({ onComplete }) {
 }
 
 /* ──────────────────────────────────────────────────────────────────
+   FLOATING ARTIFACTS
+   ────────────────────────────────────────────────────────────────── */
+function FloatingItems() {
+  const containerRef = useRef(null)
+  
+  useEffect(() => {
+    const items = gsap.utils.toArray('.floating-item')
+    items.forEach(item => {
+      // Random initial placement, ensuring they start on-screen so they are immediately visible
+      gsap.set(item, {
+        x: () => Math.random() * window.innerWidth,
+        y: () => Math.random() * window.innerHeight,
+        rotation: () => Math.random() * 360,
+        scale: () => 0.4 + Math.random() * 0.6 // varying sizes
+      })
+
+      // Continuous random drifting function
+      const float = () => {
+        gsap.to(item, {
+          x: () => (Math.random() - 0.2) * window.innerWidth * 1.2, // Drift slightly off-screen but mostly on-screen
+          y: () => (Math.random() - 0.2) * window.innerHeight * 1.2,
+          rotation: `+=${(Math.random() - 0.5) * 180}`,
+          duration: 15 + Math.random() * 15, // Smooth floating speed
+          ease: "sine.inOut",
+          onComplete: float
+        })
+      }
+      float() // start animation loop
+    })
+  }, [])
+
+  const ITEM_COUNT = 8
+  const items = Array.from({ length: ITEM_COUNT }, (_, i) => i + 1)
+
+  return (
+    <div ref={containerRef} className="floating-items-container">
+      {items.map(i => (
+        <img 
+          key={i} 
+          src={`${import.meta.env.BASE_URL}items/item-${i}.png`} 
+          className="floating-item" 
+          alt={`Floating artifact ${i}`} 
+          onError={(e) => {
+            // Bulletproof fallback in case local dev server cached the original file names
+            if (e.target.src.includes('item-')) {
+              e.target.src = `${import.meta.env.BASE_URL}items/Item ${i}.png`;
+            }
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
+/* ──────────────────────────────────────────────────────────────────
    GLOBAL 3D CANVAS BACKGROUND
    ────────────────────────────────────────────────────────────────── */
 function GlobalBackground({ onTransition }) {
@@ -891,6 +946,9 @@ export default function App() {
           <div className="film-grain" />
           <div className="vignette" />
           <div className="scanlines" />
+
+          <FloatingItems />
+
           <div className="hud">
             <div className="hud-corner hud-corner--tl" />
             <div className="hud-corner hud-corner--tr" />
