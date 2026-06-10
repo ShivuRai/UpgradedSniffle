@@ -268,13 +268,13 @@ function FloatingItems() {
       {items.map(i => (
         <img 
           key={i} 
-          src={`${import.meta.env.BASE_URL}items/item-${i}.png`} 
+          src={`${import.meta.env.BASE_URL}Items/item-${i}.png`} 
           className="floating-item" 
           alt={`Floating artifact ${i}`} 
           onError={(e) => {
             // Bulletproof fallback in case local dev server cached the original file names
             if (e.target.src.includes('item-')) {
-              e.target.src = `${import.meta.env.BASE_URL}items/Item ${i}.png`;
+              e.target.src = `${import.meta.env.BASE_URL}Items/Item ${i}.png`;
             }
           }}
         />
