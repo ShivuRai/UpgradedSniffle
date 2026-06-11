@@ -94,26 +94,31 @@ function useAmbientSound() {
         initAudio()
       } else if (audioCtxRef.current.state === 'suspended' || mutedRef.current) {
         audioCtxRef.current.resume()
-        songRef.current?.play()
+        songRef.current?.play().catch(e => console.warn(e))
         setMuted(false)
         mutedRef.current = false
       }
-      window.removeEventListener('pointerdown', startInteraction)
       window.removeEventListener('keydown', startInteraction)
-      window.removeEventListener('wheel', startInteraction)
       window.removeEventListener('click', startInteraction)
     }
     
-    window.addEventListener('pointerdown', startInteraction)
     window.addEventListener('keydown', startInteraction)
-    window.addEventListener('wheel', startInteraction)
     window.addEventListener('click', startInteraction)
     
     return () => {
-      window.removeEventListener('pointerdown', startInteraction)
       window.removeEventListener('keydown', startInteraction)
-      window.removeEventListener('wheel', startInteraction)
       window.removeEventListener('click', startInteraction)
+    }
+  }, [initAudio])
+
+  const forceStartAudio = useCallback(() => {
+    if (!audioCtxRef.current) {
+      initAudio()
+    } else if (audioCtxRef.current.state === 'suspended' || mutedRef.current) {
+      audioCtxRef.current.resume()
+      songRef.current?.play().catch(e => console.warn(e))
+      setMuted(false)
+      mutedRef.current = false
     }
   }, [initAudio])
 
@@ -140,7 +145,6 @@ function useAmbientSound() {
     // If currently playing, mute it
     else {
       gsap.to(masterGain.gain, { value: 0, duration: 0.5, onComplete: () => {
-        ctx.suspend()
         songRef.current?.pause()
       }})
       setMuted(true)
@@ -149,7 +153,7 @@ function useAmbientSound() {
   }, [initAudio])
 
   const playWhoosh = useCallback(() => {
-    if (!audioCtxRef.current || mutedRef.current) return
+    if (!audioCtxRef.current) return
     const ctx = audioCtxRef.current
     const osc = ctx.createOscillator()
     osc.type = 'sawtooth'
@@ -167,7 +171,7 @@ function useAmbientSound() {
   }, [])
 
   const playUIHover = useCallback(() => {
-    if (!audioCtxRef.current || mutedRef.current) return
+    if (!audioCtxRef.current) return
     const ctx = audioCtxRef.current
     const osc = ctx.createOscillator()
     osc.type = 'sine'
@@ -181,13 +185,41 @@ function useAmbientSound() {
   }, [])
 
   const playPageFlip = useCallback(() => {
-    if (mutedRef.current) return
     const sound = new Audio(`${import.meta.env.BASE_URL}PageSound.mp3`)
     sound.volume = 0.5
     sound.play().catch(e => console.warn(e))
   }, [])
 
-  return { muted, toggle, playWhoosh, playUIHover, playPageFlip }
+  const guitarSounds = useRef({})
+  useEffect(() => {
+    const notesToLoad = ['A3', 'B3', 'C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5', 'D5', 'E5']
+    notesToLoad.forEach(note => {
+      const audio = new Audio(`${import.meta.env.BASE_URL}${note}.wav`)
+      audio.preload = "auto"
+      guitarSounds.current[note] = audio
+    })
+  }, [])
+
+  const sequenceIndex = useRef(0)
+  const melodyPattern = [
+    'E5', 'E5', 'D5', 'C5', 'B4', 'A4', 
+    'C5', 'C5', 'B4', 'A4', 'G4', 'F4', 
+    'A4', 'A4', 'G4', 'F4', 'E4', 'D4', 
+    'F4', 'F4', 'E4', 'D4', 'C4', 'B3', 'A3'
+  ]
+
+  const playGuitarString = useCallback(() => {
+    const note = melodyPattern[sequenceIndex.current % melodyPattern.length]
+    const sound = guitarSounds.current[note]
+    if (sound) {
+      sound.currentTime = 0
+      sound.volume = 0.7
+      sound.play().catch(e => console.warn(e))
+    }
+    sequenceIndex.current++
+  }, [])
+
+  return { muted, toggle, playWhoosh, playUIHover, playPageFlip, playGuitarString, forceStartAudio }
 }
 
 /* ──────────────────────────────────────────────────────────────────
@@ -195,42 +227,26 @@ function useAmbientSound() {
    ────────────────────────────────────────────────────────────────── */
 function CinematicLoader({ onComplete }) {
   const containerRef = useRef(null)
-  const fillRef = useRef(null)
-  const [percent, setPercent] = useState(0)
+  const [frame, setFrame] = useState(100)
 
   useEffect(() => {
-    const imagesToLoad = [
-      FRAME_PATH(1), FRAME_PATH(60), FRAME_PATH(120), FRAME_PATH(180), FRAME_PATH(240),
-    ]
-    let loaded = 0
-    const total = imagesToLoad.length
-
-    const onLoad = () => {
-      loaded++
-      const p = Math.round((loaded / total) * 100)
-      setPercent(p)
-      if (fillRef.current) fillRef.current.style.width = `${p}%`
-      if (loaded === total) {
-        setTimeout(() => {
-          gsap.to(containerRef.current, { opacity: 0, duration: 1, ease: 'power2.inOut', onComplete })
-        }, 800)
-      }
+    if (frame >= 192) {
+      gsap.to(containerRef.current, { opacity: 0, duration: 1, ease: 'power2.inOut', onComplete })
     }
-    imagesToLoad.forEach(src => {
-      const img = new Image()
-      img.onload = onLoad
-      img.onerror = onLoad
-      img.src = src
-    })
-  }, [onComplete])
+  }, [frame, onComplete])
+
+  useEffect(() => {
+    const totalFrames = 192
+    const interval = setInterval(() => {
+      setFrame(f => (f < totalFrames ? f + 1 : f))
+    }, 1000 / 24)
+    return () => clearInterval(interval)
+  }, [])
 
   return (
     <div ref={containerRef} className="loader-container">
-      <div className="loader-logo">NEXUS</div>
-      <div className="loader-bar-track"><div ref={fillRef} className="loader-bar-fill" /></div>
-      <div className="loader-text">Loading Assets & Lore</div>
-      <div className="loader-percent">{percent}%</div>
-      <div className="loader-tip">TIP: Enable sound for the full AAA experience.</div>
+      <img src={`${import.meta.env.BASE_URL}LoadingScreen/ezgif-frame-${String(frame).padStart(3, '0')}.png`} className="loader-sequence-img" alt="Loading Sequence" />
+      <div className="loader-logo ancient-font" style={{ position: 'absolute', zIndex: 10 }}>Loading...</div>
     </div>
   )
 }
@@ -477,7 +493,7 @@ function GlobalBackground({ onTransition }) {
    CONTENT SECTIONS
    ────────────────────────────────────────────────────────────────── */
 
-function HeroSection() {
+function HeroSection({ playGuitarString }) {
   const sectionRef = useRef(null)
 
   useEffect(() => {
@@ -507,7 +523,13 @@ function HeroSection() {
         <h1 className="hero-title">
           <span className="name-gradient">
             {nameLetters.map((char, i) => (
-              <span key={i} className="hover-char">{char === " " ? "\u00A0" : char}</span>
+              <span 
+                key={i} 
+                className="hover-char"
+                onMouseEnter={() => playGuitarString && char !== " " && playGuitarString()}
+              >
+                {char === " " ? "\u00A0" : char}
+              </span>
             ))}
           </span>
         </h1>
@@ -1001,13 +1023,40 @@ function Archives({ playHover }) {
 }
 
 /* ── SUMMONING PORTAL (CONTACT) ── */
-function SummoningPortal() {
+const SummoningPortal = ({ onNavigate }) => {
   const ref = useRef(null)
+  const scrollRef = useRef(null)
+  
+  // Magical Effects State
+  const [parallaxStyle, setParallaxStyle] = useState({ transform: 'perspective(1000px) rotateX(0deg) rotateY(0deg)' })
+  const [isSealed, setIsSealed] = useState(false)
+
+  const handleMouseMove = (e) => {
+    if (!scrollRef.current) return
+    const rect = scrollRef.current.getBoundingClientRect()
+    // Calculate normalized position (-0.5 to 0.5)
+    const x = (e.clientX - rect.left) / rect.width - 0.5
+    const y = (e.clientY - rect.top) / rect.height - 0.5
+    
+    // Smooth, subtle 3D tilt
+    setParallaxStyle({
+      transform: `perspective(1000px) rotateX(${-y * 10}deg) rotateY(${x * 10}deg)`
+    })
+  }
+
+  const handleMouseLeave = () => {
+    setParallaxStyle({ transform: 'perspective(1000px) rotateX(0deg) rotateY(0deg)' })
+  }
+
+  const handleSealAndSend = (e) => {
+    e.preventDefault()
+    setIsSealed(true)
+  }
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      gsap.from('.terminal-container', {
-        opacity: 0, y: 50, duration: 1,
+      gsap.from('.scroll-container', {
+        opacity: 0, scale: 0.9, y: 50, duration: 1,
         scrollTrigger: { trigger: ref.current, start: 'top 70%', toggleActions: 'play none none reverse' }
       })
     }, ref)
@@ -1016,26 +1065,44 @@ function SummoningPortal() {
 
   return (
     <section ref={ref} className="portal-section">
-      <div className="terminal-container">
-        <div className="terminal-header">
-          <div className="terminal-title">NEXUS COMM-LINK v2.0</div>
-          <div className="terminal-status">ONLINE_</div>
+      <div 
+        className="scroll-container" 
+        ref={scrollRef}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+      >
+        <div className="scroll-content-wrapper" style={parallaxStyle}>
+          {!isSealed ? (
+            <>
+              <div className="scroll-header">
+                <div className="scroll-title">Magical World Of Shivu</div>
+                <div className="scroll-status">~ Send a message via Owl ~</div>
+              </div>
+              <form className="scroll-form" onSubmit={handleSealAndSend}>
+                <div className="scroll-input-group">
+                  <label className="scroll-label">Mage's Identity (Name)</label>
+                  <input type="text" className="scroll-input" placeholder="Your name..." required />
+                </div>
+                <div className="scroll-input-group">
+                  <label className="scroll-label">Aura Frequency (Email)</label>
+                  <input type="email" className="scroll-input" placeholder="Your email..." required />
+                </div>
+                <div className="scroll-input-group">
+                  <label className="scroll-label">Incantation (Message)</label>
+                  <textarea className="scroll-textarea" placeholder="Write your message here..." required />
+                </div>
+                <div className="scroll-submit-container">
+                  <button type="submit" className="scroll-submit">Seal and Send</button>
+                </div>
+              </form>
+            </>
+          ) : (
+            <div className="wax-seal-container">
+              <div className="wax-seal"></div>
+              <div className="seal-message">Your incantation has been sent via Owl.</div>
+            </div>
+          )}
         </div>
-        <form className="terminal-form" onSubmit={(e) => e.preventDefault()}>
-          <div className="terminal-input-group">
-            <label className="terminal-label">Sender ID (Name)</label>
-            <input type="text" className="terminal-input" placeholder="Enter your name..." required />
-          </div>
-          <div className="terminal-input-group">
-            <label className="terminal-label">Comms Frequency (Email)</label>
-            <input type="email" className="terminal-input" placeholder="Enter your email..." required />
-          </div>
-          <div className="terminal-input-group">
-            <label className="terminal-label">Transmission (Message)</label>
-            <textarea className="terminal-textarea" placeholder="Type your message here..." required />
-          </div>
-          <button type="submit" className="terminal-submit">Transmit Message</button>
-        </form>
       </div>
       <div className="final-links" style={{ display: 'flex', gap: '4rem', marginTop: '4rem' }}>
         <a href="mailto:shivurai138@gmail.com" className="final-link">shivurai138@gmail.com</a>
@@ -1055,17 +1122,18 @@ function SummoningPortal() {
    ────────────────────────────────────────────────────────────────── */
 export default function App() {
   const [loaded, setLoaded] = useState(false)
+  const [entered, setEntered] = useState(false)
   const [showSoundPop, setShowSoundPop] = useState(false)
   const appRef = useRef(null)
-  const { muted, toggle: toggleSound, playWhoosh, playUIHover, playPageFlip } = useAmbientSound()
+  const { muted, toggle: toggleSound, playWhoosh, playUIHover, playPageFlip, playGuitarString, forceStartAudio } = useAmbientSound()
 
   useEffect(() => {
-    if (loaded && !muted) {
+    if (entered && !muted) {
       const timer1 = setTimeout(() => setShowSoundPop(true), 1500)
       const timer2 = setTimeout(() => setShowSoundPop(false), 7000)
       return () => { clearTimeout(timer1); clearTimeout(timer2) }
     }
-  }, [loaded, muted])
+  }, [entered, muted])
 
   const triggerCameraShake = useCallback(() => {
     const app = appRef.current
@@ -1075,11 +1143,72 @@ export default function App() {
     setTimeout(() => app.classList.remove('camera-shake'), 400)
   }, [playWhoosh])
 
+  // Global Magical Particles
+  const [globalParticles, setGlobalParticles] = useState([])
+
+  useEffect(() => {
+    if (!entered) return // Wait until they enter the site
+    const handleGlobalMouseMove = (e) => {
+      if (Math.random() > 0.4) {
+        const colors = ['#00d2ff', '#ffcc00', '#b400ff']
+        const newParticle = {
+          id: Date.now() + Math.random(),
+          x: e.clientX,
+          y: e.clientY,
+          size: Math.random() * 8 + 4,
+          color: colors[Math.floor(Math.random() * colors.length)]
+        }
+        setGlobalParticles(prev => [...prev.slice(-20), newParticle])
+        setTimeout(() => {
+          setGlobalParticles(prev => prev.filter(p => p.id !== newParticle.id))
+        }, 800)
+      }
+    }
+    window.addEventListener('mousemove', handleGlobalMouseMove)
+    return () => window.removeEventListener('mousemove', handleGlobalMouseMove)
+  }, [entered])
+
   return (
     <>
+      {/* Render Global Particles */}
+      {globalParticles.map(p => (
+        <div 
+          key={p.id} 
+          className="magical-spark" 
+          style={{ 
+            left: p.x, 
+            top: p.y, 
+            width: p.size, 
+            height: p.size,
+            background: `radial-gradient(circle, #fff, ${p.color}, transparent)`,
+            filter: `drop-shadow(0 0 5px ${p.color})`
+          }}
+        />
+      ))}
+
       {!loaded && <CinematicLoader onComplete={() => setLoaded(true)} />}
 
-      {loaded && (
+      {loaded && !entered && (
+        <div 
+          style={{
+            position: 'fixed', inset: 0, zIndex: 9999, 
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)',
+            cursor: 'pointer',
+            animation: 'fadeInOverlay 2s cubic-bezier(0.16, 1, 0.3, 1) forwards'
+          }}
+          onClick={() => { setEntered(true); forceStartAudio(); }}
+        >
+          <div className="ancient-font" style={{ marginBottom: '2rem', textAlign: 'center', padding: '0 20px' }}>
+            Welcome to the Magical World
+          </div>
+          <div style={{ fontFamily: 'var(--font-ui)', fontSize: '0.85rem', letterSpacing: '0.4em', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', animation: 'pulseOpacity 2.5s infinite' }}>
+            [ Click anywhere to enter ]
+          </div>
+        </div>
+      )}
+
+      {entered && (
         <>
           <CustomCursor />
           <div className="film-grain" />
@@ -1114,9 +1243,9 @@ export default function App() {
 
       <GlobalBackground onTransition={triggerCameraShake} />
 
-      <div ref={appRef} className="content-layer" style={{ opacity: loaded ? 1 : 0, transition: 'opacity 0.5s ease' }}>
+      <div ref={appRef} className="content-layer" style={{ opacity: entered ? 1 : 0, transition: 'opacity 1s ease', pointerEvents: entered ? 'auto' : 'none' }}>
         
-        <HeroSection />
+        <HeroSection playGuitarString={playGuitarString} />
         
         <ChapterText 
           chapter="Chapter I" 
