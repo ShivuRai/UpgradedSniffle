@@ -750,51 +750,7 @@ function SkillTree({ playHover }) {
   )
 }
 
-/* ── QUEST LOG (WORK EXPERIENCE) ── */
-const QUESTS = [
-  { 
-    role: "Junior UX Designer", company: "Wipro Limited", date: "June 2024 - Feb 2026", 
-    desc: "Worked on complex digital systems, improving usability and interaction flows. Collaborated with developers, gaining exposure to real-world product development pipelines. Strengthened understanding of user behavior, interaction logic, and system design." 
-  }
-];
 
-function QuestLog({ playHover }) {
-  const ref = useRef(null)
-
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      gsap.from('.quest-header', {
-        opacity: 0, y: 30, scrollTrigger: { trigger: ref.current, start: 'top 70%', toggleActions: 'play none none reverse' }
-      })
-      gsap.utils.toArray('.quest-card').forEach((card, i) => {
-        gsap.from(card, {
-          opacity: 0, x: -50, delay: i * 0.2, duration: 0.6,
-          scrollTrigger: { trigger: card, start: 'top 85%', toggleActions: 'play none none reverse' }
-        })
-      })
-    }, ref)
-    return () => ctx.revert()
-  }, [])
-
-  return (
-    <section ref={ref} className="quest-log-section">
-      <div className="section-header quest-header">
-        <div className="section-label">// Quest Log</div>
-        <h2>Campaign History</h2>
-      </div>
-      <div className="quest-list">
-        {QUESTS.map((quest, i) => (
-          <div className="quest-card" key={i} onMouseEnter={playHover}>
-            <div className="quest-date">{quest.date}</div>
-            <div className="quest-role">{quest.role}</div>
-            <div className="quest-company">{quest.company}</div>
-            <div className="quest-desc">{quest.desc}</div>
-          </div>
-        ))}
-      </div>
-    </section>
-  )
-}
 
 /* ── MISSIONS SHOWCASE (UE5 PROJECTS) ── */
 const MISSIONS = [
@@ -1057,19 +1013,20 @@ function Archives({ playHover }) {
       </div>
       <div className="archives-grid">
         {LORE.map((lore, i) => (
-          <div 
-            className="archive-slate" 
-            id={`archive-card-${i}`}
-            key={i} 
-            onMouseEnter={playHover}
-            onMouseMove={(e) => handleMouseMove(e, i)}
-            onMouseLeave={() => handleMouseLeave(i)}
-          >
-            <div className="hologram-sweep" />
-            <div className="archive-content">
-              <div className="archive-type">{lore.type} // {lore.year}</div>
-              <div className="archive-title">{lore.title}</div>
-              <div className="archive-issuer">{lore.issuer}</div>
+          <div className="archive-card-wrapper" key={i}>
+            <div 
+              className="archive-slate" 
+              id={`archive-card-${i}`}
+              onMouseEnter={playHover}
+              onMouseMove={(e) => handleMouseMove(e, i)}
+              onMouseLeave={() => handleMouseLeave(i)}
+            >
+              <img src={`${import.meta.env.BASE_URL}pages/Page2.png`} alt="Lore Page" className="archive-page-img" />
+              <div className="archive-content">
+                <div className="archive-type">{lore.type} // {lore.year}</div>
+                <div className="archive-title">{lore.title}</div>
+                <div className="archive-issuer">{lore.issuer}</div>
+              </div>
             </div>
           </div>
         ))}
@@ -1322,13 +1279,7 @@ export default function App() {
 
         <MissionsShowcase playHover={playPageFlip} />
 
-        <ChapterText 
-          chapter="Chapter III" 
-          title="Campaign History" 
-          desc="Forged in the fires of real-world development, bridging the gap between design and technical execution."
-        />
 
-        <QuestLog playHover={playUIHover} />
         <EducationMap playHover={playUIHover} />
         <Archives playHover={playUIHover} />
         <SummoningPortal />
