@@ -252,6 +252,54 @@ function CinematicLoader({ onComplete }) {
 }
 
 /* ──────────────────────────────────────────────────────────────────
+   ASSET LOADER INDICATOR
+   ────────────────────────────────────────────────────────────────── */
+function AssetLoaderIndicator({ loaded, total }) {
+  const [opacity, setOpacity] = useState(1);
+  
+  useEffect(() => {
+    if (loaded >= total && total > 0) {
+      const t = setTimeout(() => setOpacity(0), 3000);
+      return () => clearTimeout(t);
+    }
+  }, [loaded, total]);
+
+  if (opacity === 0) return null;
+
+  return (
+    <div className="asset-loader-indicator" style={{
+      position: 'fixed',
+      top: '40px',
+      right: '50px',
+      zIndex: 99999,
+      background: 'rgba(10, 10, 18, 0.8)',
+      border: '1px solid rgba(0, 240, 255, 0.3)',
+      padding: '12px 16px',
+      borderRadius: '6px',
+      backdropFilter: 'blur(10px)',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'flex-end',
+      pointerEvents: 'none',
+      fontFamily: 'var(--font-ui)',
+      transition: 'opacity 1s ease',
+      opacity: opacity,
+      boxShadow: '0 4px 20px rgba(0,0,0,0.6)'
+    }}>
+      <div style={{ fontSize: '0.85rem', letterSpacing: '0.1em', fontWeight: 'bold', color: 'var(--color-accent)', textTransform: 'uppercase' }}>
+        Loading Assets: {loaded} / {total}
+      </div>
+      <div style={{ fontSize: '0.65rem', color: 'var(--color-text-dim)', marginTop: '4px', maxWidth: '200px', textAlign: 'right', letterSpacing: '0.05em' }}>
+        Synchronizing environment assets... Please wait for optimal immersion.
+      </div>
+      <div style={{ width: '100%', height: '2px', background: 'rgba(0, 240, 255, 0.2)', marginTop: '8px', borderRadius: '2px', overflow: 'hidden' }}>
+        <div style={{ width: `${(loaded / total) * 100}%`, height: '100%', background: 'var(--color-accent)', transition: 'width 0.2s ease' }} />
+      </div>
+    </div>
+  )
+}
+
+/* ──────────────────────────────────────────────────────────────────
    FLOATING ARTIFACTS
    ────────────────────────────────────────────────────────────────── */
 function FloatingItems() {
@@ -393,14 +441,19 @@ function FloatingItems() {
 /* ──────────────────────────────────────────────────────────────────
    GLOBAL 3D CANVAS BACKGROUND
    ────────────────────────────────────────────────────────────────── */
-function GlobalBackground({ onTransition }) {
+function GlobalBackground({ onTransition, onProgress }) {
   const canvasRef = useRef(null)
   const currentFrameRef = useRef(0)
   const onTransitionRef = useRef(onTransition)
+  const onProgressRef = useRef(onProgress)
 
   useEffect(() => {
     onTransitionRef.current = onTransition
   }, [onTransition])
+
+  useEffect(() => {
+    onProgressRef.current = onProgress
+  }, [onProgress])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -442,6 +495,9 @@ function GlobalBackground({ onTransition }) {
       img.src = FRAME_PATH(i)
       img.onload = () => {
         loadedCount++
+        if (onProgressRef.current && (loadedCount % 5 === 0 || loadedCount === TOTAL_FRAMES)) {
+          onProgressRef.current(loadedCount)
+        }
         if (loadedCount === 1) drawFrame(0)
       }
       images.push(img)
@@ -1124,6 +1180,7 @@ export default function App() {
   const [loaded, setLoaded] = useState(false)
   const [entered, setEntered] = useState(false)
   const [showSoundPop, setShowSoundPop] = useState(false)
+  const [bgLoadedCount, setBgLoadedCount] = useState(0)
   const appRef = useRef(null)
   const { muted, toggle: toggleSound, playWhoosh, playUIHover, playPageFlip, playGuitarString, forceStartAudio } = useAmbientSound()
 
@@ -1170,6 +1227,8 @@ export default function App() {
 
   return (
     <>
+      <AssetLoaderIndicator loaded={bgLoadedCount} total={TOTAL_FRAMES} />
+
       {/* Render Global Particles */}
       {globalParticles.map(p => (
         <div 
@@ -1223,25 +1282,25 @@ export default function App() {
             <div className="hud-corner hud-corner--bl" />
             <div className="hud-corner hud-corner--br" />
           </div>
-          <div style={{ position: 'fixed', top: '30px', right: '40px', zIndex: 1000, pointerEvents: 'none' }}>
+          <div style={{ position: 'fixed', top: '40px', left: '50px', zIndex: 1000, pointerEvents: 'none', display: 'flex', alignItems: 'center', gap: '15px' }}>
             <button 
               className={`sound-toggle ${muted ? 'sound-muted' : ''}`} 
               onClick={() => { toggleSound(); setShowSoundPop(false); }} 
               title="Toggle Sound"
-              style={{ position: 'relative', top: 0, right: 0, pointerEvents: 'auto' }}
+              style={{ position: 'relative', pointerEvents: 'auto', border: '1px solid rgba(0, 240, 255, 0.2)', background: 'rgba(10, 10, 18, 0.8)', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '4px', backdropFilter: 'blur(10px)', transition: 'all 0.3s ease' }}
             >
               <div className="sound-bars">
                 <div className="sound-bar" /><div className="sound-bar" /><div className="sound-bar" /><div className="sound-bar" />
               </div>
             </button>
-            <div className={`sound-popup ${showSoundPop ? 'show' : ''}`}>
-              ♫ Audio Active<br/>Click here to mute
+            <div className={`sound-popup ${showSoundPop ? 'show' : ''}`} style={{ opacity: showSoundPop ? 1 : 0, transition: 'opacity 0.5s ease', fontFamily: 'var(--font-ui)', color: 'var(--color-accent)', fontSize: '0.75rem', letterSpacing: '0.1em', background: 'rgba(10, 10, 18, 0.8)', padding: '8px 12px', border: '1px solid rgba(0, 240, 255, 0.2)', borderRadius: '4px', backdropFilter: 'blur(10px)', textTransform: 'uppercase' }}>
+              ♫ Audio Active<br/>Click to mute
             </div>
           </div>
         </>
       )}
 
-      <GlobalBackground onTransition={triggerCameraShake} />
+      <GlobalBackground onTransition={triggerCameraShake} onProgress={setBgLoadedCount} />
 
       <div ref={appRef} className="content-layer" style={{ opacity: entered ? 1 : 0, transition: 'opacity 1s ease', pointerEvents: entered ? 'auto' : 'none' }}>
         
