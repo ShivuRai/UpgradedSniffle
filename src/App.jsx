@@ -268,32 +268,17 @@ function AssetLoaderIndicator({ loaded, total }) {
 
   return (
     <div className="asset-loader-indicator" style={{
-      position: 'fixed',
-      top: '40px',
-      right: '50px',
-      zIndex: 99999,
-      background: 'rgba(10, 10, 18, 0.8)',
-      border: '1px solid rgba(0, 240, 255, 0.3)',
-      padding: '12px 16px',
-      borderRadius: '6px',
-      backdropFilter: 'blur(10px)',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'flex-end',
-      pointerEvents: 'none',
-      fontFamily: 'var(--font-ui)',
-      transition: 'opacity 1s ease',
       opacity: opacity,
-      boxShadow: '0 4px 20px rgba(0,0,0,0.6)'
+      transition: 'opacity 1s ease'
     }}>
-      <div style={{ fontSize: '0.85rem', letterSpacing: '0.1em', fontWeight: 'bold', color: 'var(--color-accent)', textTransform: 'uppercase' }}>
+      <div className="loader-indicator-title">
         Loading Assets: {loaded} / {total}
       </div>
-      <div style={{ fontSize: '0.65rem', color: 'var(--color-text-dim)', marginTop: '4px', maxWidth: '200px', textAlign: 'right', letterSpacing: '0.05em' }}>
+      <div className="loader-indicator-subtitle">
         Synchronizing environment assets... Please wait for optimal immersion.
       </div>
-      <div style={{ width: '100%', height: '2px', background: 'rgba(0, 240, 255, 0.2)', marginTop: '8px', borderRadius: '2px', overflow: 'hidden' }}>
-        <div style={{ width: `${(loaded / total) * 100}%`, height: '100%', background: 'var(--color-accent)', transition: 'width 0.2s ease' }} />
+      <div className="loader-indicator-bar-bg">
+        <div className="loader-indicator-bar-fill" style={{ width: `${(loaded / total) * 100}%` }} />
       </div>
     </div>
   )
@@ -1277,18 +1262,17 @@ export default function App() {
             <div className="hud-corner hud-corner--bl" />
             <div className="hud-corner hud-corner--br" />
           </div>
-          <div style={{ position: 'fixed', top: '40px', left: '50px', zIndex: 1000, pointerEvents: 'none', display: 'flex', alignItems: 'center', gap: '15px' }}>
+          <div className="sound-toggle-wrapper">
             <button 
-              className={`sound-toggle ${muted ? 'sound-muted' : ''}`} 
+              className={`sound-toggle-btn ${muted ? 'sound-muted' : ''}`} 
               onClick={() => { toggleSound(); setShowSoundPop(false); }} 
               title="Toggle Sound"
-              style={{ position: 'relative', pointerEvents: 'auto', border: '1px solid rgba(0, 240, 255, 0.2)', background: 'rgba(10, 10, 18, 0.8)', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '4px', backdropFilter: 'blur(10px)', transition: 'all 0.3s ease' }}
             >
               <div className="sound-bars">
                 <div className="sound-bar" /><div className="sound-bar" /><div className="sound-bar" /><div className="sound-bar" />
               </div>
             </button>
-            <div className={`sound-popup ${showSoundPop ? 'show' : ''}`} style={{ opacity: showSoundPop ? 1 : 0, transition: 'opacity 0.5s ease', fontFamily: 'var(--font-ui)', color: 'var(--color-accent)', fontSize: '0.75rem', letterSpacing: '0.1em', background: 'rgba(10, 10, 18, 0.8)', padding: '8px 12px', border: '1px solid rgba(0, 240, 255, 0.2)', borderRadius: '4px', backdropFilter: 'blur(10px)', textTransform: 'uppercase' }}>
+            <div className={`sound-popup ${showSoundPop ? 'show' : ''}`} style={{ opacity: showSoundPop ? 1 : 0 }}>
               ♫ Audio Active<br/>Click to mute
             </div>
           </div>
