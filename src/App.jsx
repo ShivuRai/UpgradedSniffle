@@ -976,12 +976,50 @@ function Archives({ playHover }) {
       gsap.from('.archives-header', {
         opacity: 0, y: 30, scrollTrigger: { trigger: ref.current, start: 'top 70%', toggleActions: 'play none none reverse' }
       })
-      gsap.utils.toArray('.archive-slate').forEach((slate, i) => {
-        gsap.from(slate, {
-          opacity: 0, y: 40, scale: 0.95, delay: i * 0.15, duration: 0.6,
-          scrollTrigger: { trigger: '.archives-grid', start: 'top 80%', toggleActions: 'play none none reverse' }
+
+      const wrappers = gsap.utils.toArray('.archive-card-wrapper')
+      
+      wrappers.forEach(wrapper => {
+        gsap.set(wrapper, {
+          x: () => gsap.utils.random(-800, 800),
+          y: () => gsap.utils.random(-800, 800),
+          z: () => gsap.utils.random(-500, 500),
+          rotationX: () => gsap.utils.random(-180, 180),
+          rotationY: () => gsap.utils.random(-180, 180),
+          rotationZ: () => gsap.utils.random(-180, 180),
+          scale: () => gsap.utils.random(0.1, 2.5),
+          opacity: 0
         })
       })
+
+      gsap.to(wrappers, {
+        x: 0, y: 0, z: 0,
+        rotationX: 0, rotationY: 0, rotationZ: 0,
+        scale: 1, opacity: 1,
+        ease: "power2.out",
+        stagger: { amount: 0.5, from: "random" },
+        scrollTrigger: {
+          trigger: ref.current,
+          start: 'top 50%',
+          end: 'center 40%',
+          scrub: 1.5
+        }
+      })
+
+      const slates = gsap.utils.toArray('.archive-slate')
+      slates.forEach((slate, i) => {
+        gsap.to(slate, {
+          y: () => "+=" + (Math.random() * 20 + 10),
+          x: () => "+=" + (Math.random() * 10 + 5),
+          rotationZ: () => "+=" + (Math.random() * 6 - 3),
+          duration: () => 3 + Math.random() * 2,
+          yoyo: true,
+          repeat: -1,
+          ease: "sine.inOut",
+          delay: i * 0.2
+        })
+      })
+
     }, ref)
     return () => ctx.revert()
   }, [])
