@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { Mail, Linkedin, Palette, Briefcase } from 'lucide-react'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -1164,22 +1165,10 @@ const SummoningPortal = ({ onNavigate }) => {
         </div>
       </div>
       <div className="rune-links-wrapper">
-        <a href="mailto:shivurai138@gmail.com" className="wax-link-item">
-          <div className="wax-link-seal">E</div>
-          <span className="wax-link-text">Email</span>
-        </a>
-        <a href="https://linkedin.com/in/shivamrai45" target="_blank" rel="noreferrer" className="wax-link-item">
-          <div className="wax-link-seal">L</div>
-          <span className="wax-link-text">LinkedIn</span>
-        </a>
-        <a href="#" className="wax-link-item">
-          <div className="wax-link-seal">A</div>
-          <span className="wax-link-text">ArtStation</span>
-        </a>
-        <a href="#" className="wax-link-item">
-          <div className="wax-link-seal">P</div>
-          <span className="wax-link-text">Portfolio</span>
-        </a>
+        <MagicalLink href="mailto:shivurai138@gmail.com" icon={Mail} label="Email" />
+        <MagicalLink href="https://linkedin.com/in/shivamrai45" icon={Linkedin} label="LinkedIn" />
+        <MagicalLink href="#" icon={Palette} label="ArtStation" />
+        <MagicalLink href="#" icon={Briefcase} label="Portfolio" />
       </div>
       <div className="final-copyright" style={{ marginTop: '3rem', fontFamily: 'var(--font-ui)', fontSize: '0.65rem', letterSpacing: '0.3em', color: '#666', textTransform: 'uppercase' }}>
         © 2026 Shivam Rai — All rights reserved
@@ -1187,6 +1176,76 @@ const SummoningPortal = ({ onNavigate }) => {
     </section>
   )
 }
+
+/* ──────────────────────────────────────────────────────────────────
+   MAGICAL LINK (FOOTER ICONS)
+   ────────────────────────────────────────────────────────────────── */
+const MagicalLink = ({ href, icon: Icon, label }) => {
+  const [sparks, setSparks] = useState([]);
+  const intervalRef = useRef(null);
+
+  const handleMouseEnter = () => {
+    intervalRef.current = setInterval(() => {
+      const colors = ['#ffcc00', '#00d2ff', '#b400ff', '#ff0055', '#00ffaa'];
+      const angle = Math.random() * Math.PI * 2;
+      const velocity = 25 + Math.random() * 35;
+      const tx = Math.cos(angle) * velocity;
+      const ty = Math.sin(angle) * velocity;
+      
+      const spark = {
+        id: Date.now() + Math.random(),
+        color: colors[Math.floor(Math.random() * colors.length)],
+        tx, ty,
+        duration: 0.5 + Math.random() * 0.5
+      };
+      
+      setSparks(prev => [...prev.slice(-15), spark]);
+      
+      setTimeout(() => {
+        setSparks(prev => prev.filter(p => p.id !== spark.id));
+      }, spark.duration * 1000);
+    }, 50);
+  };
+
+  const handleMouseLeave = () => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, []);
+
+  return (
+    <a 
+      href={href} 
+      className="magical-icon-link"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      target="_blank" 
+      rel="noreferrer"
+    >
+      <div className="magical-icon-container">
+        <Icon size={28} strokeWidth={1.5} />
+        {sparks.map(s => (
+          <div 
+            key={s.id}
+            className="ejecting-spark"
+            style={{
+              '--tx': `${s.tx}px`,
+              '--ty': `${s.ty}px`,
+              '--duration': `${s.duration}s`,
+              backgroundColor: s.color,
+              boxShadow: `0 0 10px ${s.color}, 0 0 5px #fff`
+            }}
+          />
+        ))}
+      </div>
+      <span className="magical-icon-label">{label}</span>
+    </a>
+  );
+};
 
 /* ──────────────────────────────────────────────────────────────────
    MAIN APP
