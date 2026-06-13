@@ -1164,17 +1164,21 @@ const SummoningPortal = ({ onNavigate }) => {
         </div>
       </div>
       <div className="rune-links-wrapper">
-        <a href="mailto:shivurai138@gmail.com" className="rune-link">
-          <span className="rune-link-text">Email</span>
+        <a href="mailto:shivurai138@gmail.com" className="wax-link-item">
+          <div className="wax-link-seal">E</div>
+          <span className="wax-link-text">Email</span>
         </a>
-        <a href="https://linkedin.com/in/shivamrai45" target="_blank" rel="noreferrer" className="rune-link">
-          <span className="rune-link-text">LinkedIn</span>
+        <a href="https://linkedin.com/in/shivamrai45" target="_blank" rel="noreferrer" className="wax-link-item">
+          <div className="wax-link-seal">L</div>
+          <span className="wax-link-text">LinkedIn</span>
         </a>
-        <a href="#" className="rune-link">
-          <span className="rune-link-text">ArtStation</span>
+        <a href="#" className="wax-link-item">
+          <div className="wax-link-seal">A</div>
+          <span className="wax-link-text">ArtStation</span>
         </a>
-        <a href="#" className="rune-link">
-          <span className="rune-link-text">Portfolio</span>
+        <a href="#" className="wax-link-item">
+          <div className="wax-link-seal">P</div>
+          <span className="wax-link-text">Portfolio</span>
         </a>
       </div>
       <div className="final-copyright" style={{ marginTop: '3rem', fontFamily: 'var(--font-ui)', fontSize: '0.65rem', letterSpacing: '0.3em', color: '#666', textTransform: 'uppercase' }}>
