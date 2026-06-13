@@ -1019,8 +1019,8 @@ function Archives({ playHover }) {
     const y = e.clientY - rect.top
     const centerX = rect.width / 2
     const centerY = rect.height / 2
-    const rotateX = ((y - centerY) / centerY) * -10
-    const rotateY = ((x - centerX) / centerX) * 10
+    const rotateX = ((y - centerY) / centerY) * -3
+    const rotateY = ((x - centerX) / centerX) * 3
     gsap.to(card, { rotateX, rotateY, duration: 0.1, ease: 'none' })
   }
 

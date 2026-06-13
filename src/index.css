@@ -307,7 +307,6 @@ section { position: relative; width: 100%; }
   position: relative; 
   width: 100%;
   transform-style: preserve-3d;
-  transition: transform 0.1s ease-out;
   cursor: none;
   background: none;
   border: none;
