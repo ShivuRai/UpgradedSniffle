@@ -864,3 +864,74 @@ body, a, button, input, textarea, select, .portal-section {
   }
 }
 
+
+/* ------------------------------------------------------------------
+   RUNE LINKS (FOOTER)
+   ------------------------------------------------------------------ */
+.rune-links-wrapper {
+  display: flex;
+  gap: 2.5rem;
+  justify-content: center;
+  align-items: center;
+  margin-top: 5rem;
+  position: relative;
+  z-index: 10;
+  flex-wrap: wrap;
+}
+
+.rune-link {
+  font-family: var(--font-ancient);
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-decoration: none;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 0.8rem 2rem;
+  position: relative;
+  transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(220, 150, 50, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  backdrop-filter: blur(4px);
+}
+
+.rune-link::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 50%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(220,150,50,0.2), transparent);
+  transition: left 0.5s ease;
+  transform: skewX(-20deg);
+}
+
+.rune-link:hover::before {
+  left: 150%;
+  transition: left 0.7s ease;
+}
+
+.rune-link:hover {
+  color: var(--color-accent-alt);
+  border-color: rgba(220, 150, 50, 0.5);
+  box-shadow: 0 0 20px rgba(220, 150, 50, 0.2), inset 0 0 15px rgba(220, 150, 50, 0.1);
+  transform: translateY(-5px) scale(1.05);
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.rune-link-text {
+  position: relative;
+  z-index: 2;
+  text-shadow: 0 0 10px rgba(0,0,0,0.8);
+}
+
+@media (max-width: 768px) {
+  .rune-links-wrapper {
+    gap: 1.5rem;
+    flex-direction: column;
+  }
+  .rune-link {
+    width: 80%;
+    text-align: center;
+  }
+}

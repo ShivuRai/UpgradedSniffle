@@ -1163,11 +1163,19 @@ const SummoningPortal = ({ onNavigate }) => {
           )}
         </div>
       </div>
-      <div className="final-links" style={{ display: 'flex', gap: '4rem', marginTop: '4rem' }}>
-        <a href="mailto:shivurai138@gmail.com" className="final-link">shivurai138@gmail.com</a>
-        <a href="https://linkedin.com/in/shivamrai45" target="_blank" rel="noreferrer" className="final-link">LinkedIn</a>
-        <a href="#" className="final-link">ArtStation</a>
-        <a href="#" className="final-link">Portfolio</a>
+      <div className="rune-links-wrapper">
+        <a href="mailto:shivurai138@gmail.com" className="rune-link">
+          <span className="rune-link-text">Email</span>
+        </a>
+        <a href="https://linkedin.com/in/shivamrai45" target="_blank" rel="noreferrer" className="rune-link">
+          <span className="rune-link-text">LinkedIn</span>
+        </a>
+        <a href="#" className="rune-link">
+          <span className="rune-link-text">ArtStation</span>
+        </a>
+        <a href="#" className="rune-link">
+          <span className="rune-link-text">Portfolio</span>
+        </a>
       </div>
       <div className="final-copyright" style={{ marginTop: '3rem', fontFamily: 'var(--font-ui)', fontSize: '0.65rem', letterSpacing: '0.3em', color: '#666', textTransform: 'uppercase' }}>
         © 2026 Shivam Rai — All rights reserved
