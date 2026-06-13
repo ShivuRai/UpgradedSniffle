@@ -955,6 +955,7 @@ const LORE = [
 
 function Archives({ playHover }) {
   const ref = useRef(null)
+  const floatTweens = useRef([])
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -993,7 +994,7 @@ function Archives({ playHover }) {
 
       const slates = gsap.utils.toArray('.archive-slate')
       slates.forEach((slate, i) => {
-        gsap.to(slate, {
+        const tween = gsap.to(slate, {
           y: () => "+=" + (Math.random() * 20 + 10),
           x: () => "+=" + (Math.random() * 10 + 5),
           rotationZ: () => "+=" + (Math.random() * 6 - 3),
@@ -1003,29 +1004,50 @@ function Archives({ playHover }) {
           ease: "sine.inOut",
           delay: i * 0.2
         })
+        floatTweens.current[i] = tween
       })
 
     }, ref)
     return () => ctx.revert()
   }, [])
 
-  const handleMouseMove = (e, i) => {
-    const card = document.getElementById(`archive-card-${i}`)
-    if (!card) return
-    const rect = card.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
-    const centerX = rect.width / 2
-    const centerY = rect.height / 2
-    const rotateX = ((y - centerY) / centerY) * -10
-    const rotateY = ((x - centerX) / centerX) * 10
-    gsap.to(card, { rotateX, rotateY, duration: 0.1, ease: 'none' })
+  const handleMouseEnter = (i) => {
+    if (playHover) playHover();
+    if (floatTweens.current[i]) floatTweens.current[i].pause();
+    
+    const wrapper = document.getElementById(`archive-wrapper-${i}`);
+    if (wrapper) wrapper.style.zIndex = 100;
+    
+    const card = document.getElementById(`archive-card-${i}`);
+    if (card) {
+      gsap.to(card, {
+        scale: 1.15,
+        rotationZ: 0,
+        rotateX: 0,
+        rotateY: 0,
+        x: 0,
+        y: 0,
+        duration: 0.4,
+        ease: 'back.out(1.5)'
+      });
+    }
   }
 
   const handleMouseLeave = (i) => {
-    const card = document.getElementById(`archive-card-${i}`)
-    if (!card) return
-    gsap.to(card, { rotateX: 0, rotateY: 0, duration: 0.5, ease: 'power2.out' })
+    const wrapper = document.getElementById(`archive-wrapper-${i}`);
+    if (wrapper) wrapper.style.zIndex = 1;
+    
+    const card = document.getElementById(`archive-card-${i}`);
+    if (card) {
+      gsap.to(card, {
+        scale: 1,
+        duration: 0.5,
+        ease: 'power2.out',
+        onComplete: () => {
+          if (floatTweens.current[i]) floatTweens.current[i].play();
+        }
+      });
+    }
   }
 
   return (
@@ -1036,12 +1058,11 @@ function Archives({ playHover }) {
       </div>
       <div className="archives-grid">
         {LORE.map((lore, i) => (
-          <div className="archive-card-wrapper" key={i}>
+          <div className="archive-card-wrapper" id={`archive-wrapper-${i}`} key={i} style={{ zIndex: 1, position: 'relative' }}>
             <div 
               className="archive-slate" 
               id={`archive-card-${i}`}
-              onMouseEnter={playHover}
-              onMouseMove={(e) => handleMouseMove(e, i)}
+              onMouseEnter={() => handleMouseEnter(i)}
               onMouseLeave={() => handleMouseLeave(i)}
             >
               <img src={`${import.meta.env.BASE_URL}pages/Page2.png`} alt="Lore Page" className="archive-page-img" />
