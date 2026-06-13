@@ -223,34 +223,6 @@ function useAmbientSound() {
   return { muted, toggle, playWhoosh, playUIHover, playPageFlip, playGuitarString, forceStartAudio }
 }
 
-/* ──────────────────────────────────────────────────────────────────
-   CINEMATIC LOADER
-   ────────────────────────────────────────────────────────────────── */
-function CinematicLoader({ onComplete }) {
-  const containerRef = useRef(null)
-  const [frame, setFrame] = useState(100)
-
-  useEffect(() => {
-    if (frame >= 192) {
-      gsap.to(containerRef.current, { opacity: 0, duration: 1, ease: 'power2.inOut', onComplete })
-    }
-  }, [frame, onComplete])
-
-  useEffect(() => {
-    const totalFrames = 192
-    const interval = setInterval(() => {
-      setFrame(f => (f < totalFrames ? f + 1 : f))
-    }, 1000 / 24)
-    return () => clearInterval(interval)
-  }, [])
-
-  return (
-    <div ref={containerRef} className="loader-container">
-      <img src={`${import.meta.env.BASE_URL}LoadingScreen/ezgif-frame-${String(frame).padStart(3, '0')}.png`} className="loader-sequence-img" alt="Loading Sequence" />
-      <div className="loader-logo ancient-font" style={{ position: 'absolute', zIndex: 10 }}>Loading...</div>
-    </div>
-  )
-}
 
 /* ──────────────────────────────────────────────────────────────────
    ASSET LOADER INDICATOR
@@ -427,11 +399,12 @@ function FloatingItems() {
 /* ──────────────────────────────────────────────────────────────────
    GLOBAL 3D CANVAS BACKGROUND
    ────────────────────────────────────────────────────────────────── */
-function GlobalBackground({ onTransition, onProgress }) {
+function GlobalBackground({ onTransition, onProgress, onReady }) {
   const canvasRef = useRef(null)
   const currentFrameRef = useRef(0)
   const onTransitionRef = useRef(onTransition)
   const onProgressRef = useRef(onProgress)
+  const onReadyRef = useRef(onReady)
 
   useEffect(() => {
     onTransitionRef.current = onTransition
@@ -442,9 +415,13 @@ function GlobalBackground({ onTransition, onProgress }) {
   }, [onProgress])
 
   useEffect(() => {
+    onReadyRef.current = onReady
+  }, [onReady])
+
+  useEffect(() => {
     const canvas = canvasRef.current
     const ctx = canvas.getContext('2d', { alpha: false })
-    const images = []
+    const images = new Array(TOTAL_FRAMES)
     let loadedCount = 0
 
     const setCanvasSize = () => {
@@ -476,17 +453,28 @@ function GlobalBackground({ onTransition, onProgress }) {
       ctx.drawImage(img, drawX, drawY, drawW, drawH)
     }
 
-    for (let i = 1; i <= TOTAL_FRAMES; i++) {
-      const img = new Image()
-      img.src = FRAME_PATH(i)
-      img.onload = () => {
-        loadedCount++
-        if (onProgressRef.current && (loadedCount % 5 === 0 || loadedCount === TOTAL_FRAMES)) {
-          onProgressRef.current(loadedCount)
+    const firstImg = new Image()
+    firstImg.src = FRAME_PATH(1)
+    firstImg.onload = () => {
+      images[0] = firstImg
+      loadedCount++
+      drawFrame(0)
+      if (onProgressRef.current) onProgressRef.current(loadedCount)
+      if (onReadyRef.current) onReadyRef.current()
+
+      setTimeout(() => {
+        for (let i = 2; i <= TOTAL_FRAMES; i++) {
+          const img = new Image()
+          img.src = FRAME_PATH(i)
+          img.onload = () => {
+            loadedCount++
+            if (onProgressRef.current && (loadedCount % 10 === 0 || loadedCount === TOTAL_FRAMES)) {
+              onProgressRef.current(loadedCount)
+            }
+          }
+          images[i - 1] = img
         }
-        if (loadedCount === 1) drawFrame(0)
-      }
-      images.push(img)
+      }, 50)
     }
 
     const obj = { frame: 0 }
@@ -1036,7 +1024,7 @@ function Archives({ playHover }) {
         x: 0,
         y: 0,
         z: 50,
-        duration: 0.5,
+        duration: 0.2,
         ease: 'power3.out',
         overwrite: 'auto'
       });
@@ -1050,10 +1038,12 @@ function Archives({ playHover }) {
     const card = document.getElementById(`archive-card-${i}`);
     if (card) {
       gsap.to(card, {
-        rotationZ: () => floatTweens.current[i] ? floatTweens.current[i].vars.rotationZ : 0,
+        rotationZ: 0,
+        rotationX: 0,
+        rotationY: 0,
         scale: 1,
         z: 0,
-        duration: 0.5,
+        duration: 0.2,
         ease: 'power2.out',
         overwrite: 'auto',
         onComplete: () => {
@@ -1342,7 +1332,11 @@ export default function App() {
         />
       ))}
 
-      {!loaded && <CinematicLoader onComplete={() => setLoaded(true)} />}
+      {!loaded && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: '#050508' }} />
+      )}
+
+      <GlobalBackground onTransition={triggerCameraShake} onProgress={setBgLoadedCount} onReady={() => setLoaded(true)} />
 
       {loaded && !entered && (
         <div 
