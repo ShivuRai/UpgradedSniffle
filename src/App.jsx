@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { FaEnvelope, FaLinkedin, FaArtstation, FaBriefcase } from 'react-icons/fa'
+import { FaEnvelope, FaLinkedin, FaArtstation, FaBehance } from 'react-icons/fa'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -546,7 +546,7 @@ function HeroSection({ playGuitarString }) {
         .from('.hero-title', { opacity: 0, scale: 1.2, filter: 'blur(20px)', duration: 2, ease: 'power2.out' }, '-=0.8')
         .from('.hero-desc', { opacity: 0, y: 20, filter: 'blur(5px)', duration: 1, ease: 'power3.out' }, '-=1.2')
         .from('.hero-line', { width: 0, duration: 1, ease: 'power2.out' }, '-=0.8')
-        .from('.hero-cta', { opacity: 0, y: 20, duration: 0.8, ease: 'power3.out' }, '-=0.6')
+        .fromTo('.hero-cta', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' }, '-=0.6')
 
       gsap.to(sectionRef.current, {
         opacity: 0, y: -100,
@@ -579,9 +579,14 @@ function HeroSection({ playGuitarString }) {
           Specializing in Unreal Engine 5, real-time world building, cinematic storytelling, and immersive visual design.
         </p>
         <div className="hero-line" />
-        <button className="hero-cta" onClick={() => window.scrollTo({ top: window.innerHeight, behavior: 'smooth' })}>
-          <span className="btn-text">Initialize Sequence</span>
-        </button>
+        <div className="hero-actions" style={{ display: 'flex', gap: '1.5rem', justifyContent: 'center', marginTop: '1rem' }}>
+          <button className="hero-cta" onClick={() => window.scrollTo({ top: window.innerHeight, behavior: 'smooth' })}>
+            <span className="btn-text">Initialize Sequence</span>
+          </button>
+          <a href={`${import.meta.env.BASE_URL}Shivam_GamingResume.pdf`} target="_blank" rel="noreferrer" className="hero-cta" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span className="btn-text">Download Resume</span>
+          </a>
+        </div>
       </div>
       <div className="hero-scroll-indicator">
         <div className="scroll-arrow" />
@@ -1030,8 +1035,10 @@ function Archives({ playHover }) {
         rotationY: 0,
         x: 0,
         y: 0,
-        duration: 0.4,
-        ease: 'back.out(1.5)'
+        z: 50,
+        duration: 0.5,
+        ease: 'power3.out',
+        overwrite: 'auto'
       });
     }
   }
@@ -1043,9 +1050,12 @@ function Archives({ playHover }) {
     const card = document.getElementById(`archive-card-${i}`);
     if (card) {
       gsap.to(card, {
+        rotationZ: () => floatTweens.current[i] ? floatTweens.current[i].vars.rotationZ : 0,
         scale: 1,
+        z: 0,
         duration: 0.5,
         ease: 'power2.out',
+        overwrite: 'auto',
         onComplete: () => {
           if (floatTweens.current[i]) floatTweens.current[i].play();
         }
@@ -1165,12 +1175,25 @@ const SummoningPortal = ({ onNavigate }) => {
         </div>
       </div>
       <div className="rune-links-wrapper">
+        <svg width="0" height="0" style={{ position: 'absolute' }}>
+          <defs>
+            <linearGradient id="magic-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#00f0ff">
+                <animate attributeName="stop-color" values="#00f0ff;#7b2fff;#ff2d7b;#00f0ff" dur="4s" repeatCount="indefinite" />
+              </stop>
+              <stop offset="100%" stopColor="#7b2fff">
+                <animate attributeName="stop-color" values="#7b2fff;#ff2d7b;#00f0ff;#7b2fff" dur="4s" repeatCount="indefinite" />
+              </stop>
+            </linearGradient>
+          </defs>
+        </svg>
+
         <MagicalLink href="mailto:shivurai138@gmail.com" icon={FaEnvelope} label="Email" />
         <MagicalLink href="https://linkedin.com/in/shivamrai45" icon={FaLinkedin} label="LinkedIn" />
-        <MagicalLink href="#" icon={FaArtstation} label="ArtStation" />
-        <MagicalLink href="#" icon={FaBriefcase} label="Portfolio" />
+        <MagicalLink href="https://www.artstation.com/shivurai" icon={FaArtstation} label="ArtStation" />
+        <MagicalLink href="https://www.behance.net/shivamrai45" icon={FaBehance} label="Behance" />
       </div>
-      <div className="final-copyright" style={{ marginTop: '3rem', fontFamily: 'var(--font-ui)', fontSize: '0.65rem', letterSpacing: '0.3em', color: '#666', textTransform: 'uppercase' }}>
+      <div className="final-copyright" style={{ marginTop: '3rem', fontFamily: 'var(--font-ui)', fontSize: '0.65rem', letterSpacing: '0.3em', color: '#666', textTransform: 'uppercase', textAlign: 'center' }}>
         © 2026 Shivam Rai — All rights reserved
       </div>
     </section>
@@ -1186,7 +1209,7 @@ const MagicalLink = ({ href, icon: Icon, label }) => {
 
   const handleMouseEnter = () => {
     intervalRef.current = setInterval(() => {
-      const colors = ['#ffcc00', '#00d2ff', '#b400ff', '#ff0055', '#00ffaa'];
+      const colors = ['#00f0ff', '#7b2fff', '#ff6b35', '#ff2d7b', '#ffd700'];
       const angle = Math.random() * Math.PI * 2;
       const velocity = 25 + Math.random() * 35;
       const tx = Math.cos(angle) * velocity;
@@ -1227,7 +1250,7 @@ const MagicalLink = ({ href, icon: Icon, label }) => {
       rel="noreferrer"
     >
       <div className="magical-icon-container">
-        <Icon size={28} strokeWidth={1.5} />
+        <Icon size={28} style={{ fill: 'url(#magic-grad)' }} />
         {sparks.map(s => (
           <div 
             key={s.id}
@@ -1398,6 +1421,12 @@ export default function App() {
 
         <EducationMap playHover={playUIHover} />
         <Archives playHover={playUIHover} />
+        
+        <ChapterText 
+          chapter="Chapter III" 
+          title="The Final Incantation" 
+          desc="Reach out across the aether to forge a new alliance or summon my expertise for your next quest."
+        />
         <SummoningPortal />
 
       </div>
