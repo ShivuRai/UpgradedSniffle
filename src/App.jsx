@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { Mail, Linkedin, Palette, Briefcase } from 'lucide-react'
+import { FaEnvelope, FaLinkedin, FaArtstation, FaBriefcase } from 'react-icons/fa'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -1165,10 +1165,10 @@ const SummoningPortal = ({ onNavigate }) => {
         </div>
       </div>
       <div className="rune-links-wrapper">
-        <MagicalLink href="mailto:shivurai138@gmail.com" icon={Mail} label="Email" />
-        <MagicalLink href="https://linkedin.com/in/shivamrai45" icon={Linkedin} label="LinkedIn" />
-        <MagicalLink href="#" icon={Palette} label="ArtStation" />
-        <MagicalLink href="#" icon={Briefcase} label="Portfolio" />
+        <MagicalLink href="mailto:shivurai138@gmail.com" icon={FaEnvelope} label="Email" />
+        <MagicalLink href="https://linkedin.com/in/shivamrai45" icon={FaLinkedin} label="LinkedIn" />
+        <MagicalLink href="#" icon={FaArtstation} label="ArtStation" />
+        <MagicalLink href="#" icon={FaBriefcase} label="Portfolio" />
       </div>
       <div className="final-copyright" style={{ marginTop: '3rem', fontFamily: 'var(--font-ui)', fontSize: '0.65rem', letterSpacing: '0.3em', color: '#666', textTransform: 'uppercase' }}>
         © 2026 Shivam Rai — All rights reserved
