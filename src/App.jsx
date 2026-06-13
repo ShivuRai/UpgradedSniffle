@@ -1011,6 +1011,19 @@ function Archives({ playHover }) {
     return () => ctx.revert()
   }, [])
 
+  const handleMouseMove = (e, i) => {
+    const card = document.getElementById(`archive-card-${i}`)
+    if (!card) return
+    const rect = card.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
+    const centerX = rect.width / 2
+    const centerY = rect.height / 2
+    const rotateX = ((y - centerY) / centerY) * -10
+    const rotateY = ((x - centerX) / centerX) * 10
+    gsap.to(card, { rotateX, rotateY, duration: 0.1, ease: 'none' })
+  }
+
   const handleMouseEnter = (i) => {
     if (playHover) playHover();
     if (floatTweens.current[i]) floatTweens.current[i].pause();
@@ -1023,8 +1036,6 @@ function Archives({ playHover }) {
       gsap.to(card, {
         scale: 1.15,
         rotationZ: 0,
-        rotateX: 0,
-        rotateY: 0,
         x: 0,
         y: 0,
         duration: 0.4,
@@ -1063,6 +1074,7 @@ function Archives({ playHover }) {
               className="archive-slate" 
               id={`archive-card-${i}`}
               onMouseEnter={() => handleMouseEnter(i)}
+              onMouseMove={(e) => handleMouseMove(e, i)}
               onMouseLeave={() => handleMouseLeave(i)}
             >
               <img src={`${import.meta.env.BASE_URL}pages/Page2.png`} alt="Lore Page" className="archive-page-img" />
